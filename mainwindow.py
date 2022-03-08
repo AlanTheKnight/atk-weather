@@ -1,12 +1,12 @@
 from PyQt5 import QtWidgets, QtCore, QtNetwork, QtGui
-import configparser
 import json
+import toml
 
 
-config = configparser.RawConfigParser()
-config.read('.settings.ini')
-TOKEN = config.get("settings", "token")
-CITY = "Saint Petersburg"
+with open("config.toml") as f:
+    config = toml.load(f)
+TOKEN = config["settings"]["token"]
+CITY = config["settings"]["city"]
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -26,20 +26,27 @@ class MainWindow(QtWidgets.QMainWindow):
 
         cityLabel = QtWidgets.QLabel(f"City: {CITY}")
         cityLabel.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTop)
-        cityLabel.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
+        cityLabel.setSizePolicy(
+            QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
 
         self.tempLabel = QtWidgets.QLabel()
-        self.tempLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
+        self.tempLabel.setAlignment(
+            QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
         self.tempLabel.setFont(QtGui.QFont("sans-serif", 22, QtGui.QFont.Bold))
-        self.tempLabel.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
+        self.tempLabel.setSizePolicy(
+            QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
 
         self.iconLabel = QtWidgets.QLabel()
-        self.iconLabel.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
-        self.iconLabel.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
+        self.iconLabel.setAlignment(
+            QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+        self.iconLabel.setSizePolicy(
+            QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
 
         self.descLabel = QtWidgets.QLabel()
-        self.descLabel.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
-        self.descLabel.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+        self.descLabel.setSizePolicy(
+            QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed)
+        self.descLabel.setAlignment(
+            QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
         self.descLabel.setFont(QtGui.QFont("sans-serif", 20))
 
         layout = QtWidgets.QVBoxLayout()
@@ -51,7 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addStretch()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
-        
+
         quitAction = QtWidgets.QAction(self)
         quitAction.setShortcut("Ctrl+Q")
         quitAction.triggered.connect(self.close)
@@ -63,7 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.manager = QtNetwork.QNetworkAccessManager()
         self.manager.finished.connect(self.showWeatherIcon)
         self.manager.get(QtNetwork.QNetworkRequest(url))
-    
+
     def showWeatherIcon(self, response: QtNetwork.QNetworkReply):
         # Show the weather icon
         if response.error():
@@ -77,17 +84,19 @@ class MainWindow(QtWidgets.QMainWindow):
     def getWeather(self):
         # Send API request to openweathermap.org
         city = "Saint Petersburg"  # We can change this to any city, e.g. "London"
-        url = QtCore.QUrl(f"http://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={TOKEN}&units=metric")
+        url = QtCore.QUrl(
+            f"http://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={TOKEN}&units=metric")
         self.manager = QtNetwork.QNetworkAccessManager()
         self.manager.finished.connect(self.showWeather)
         self.manager.get(QtNetwork.QNetworkRequest(url))
-    
+
     def showWeather(self, response: QtNetwork.QNetworkReply):
         # Show the weather data
         if response.error():
             print(response.errorString())
             return
-        self.weatherData = json.loads(response.readAll().data().decode("utf-8"))
+        self.weatherData = json.loads(
+            response.readAll().data().decode("utf-8"))
         self.manager.deleteLater()
         self.getWeatherIcon(self.weatherData["weather"][0]["icon"])
         temperature = round(self.weatherData["main"]["temp"])
